@@ -1,0 +1,42 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+html,body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+
+ul li{
+    list-style-type:none;
+}
+
+.container {
+    margin: 0 auto;
+    width: 100%;
+}
+
+.filter {
+    float: left;
+    position: absolute;
+    height: 100%;
+    width: 16em;
+    background-color: teal;
+    border: 2px solid aliceblue;
+    text-align: left;
+    line-height: 24px;
+    margin: 0;
+    padding: 1em;
+}
+
+#map {
+    height: 100%;
+    margin-left: 16em;
+}
+
+input {
+    font-size: 12px;
+}
