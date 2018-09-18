@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+        <div class="container">
+            <div class="filter">
+                <div style="position: relative">
+                    <input type="text" id="input" >
+                    <ul id="results" >
+                        <li></li>
+                    </ul>
+                </div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+    <script src="js/main.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyAIVJpu_kwmxRR4tkcBnnrCSiQJt3ne4YE&callback=initMap" async defer></script>
+  </body>
+</html>
