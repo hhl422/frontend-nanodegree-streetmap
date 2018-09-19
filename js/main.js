@@ -1,4 +1,5 @@
 var map;
+var service;
 var markers = [];
 var defaultIcon;
 var highlightedIcon;
@@ -24,7 +25,7 @@ function initMap() {
 
     map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 40.7413549, lng: -73.9980244 },
-        zoom: 13
+        zoom: 16 //0 is the lowest zoom, and displays the entire earth
     });
 
     //get current location
@@ -35,6 +36,7 @@ function initMap() {
                 lng: position.coords.longitude
             };
 
+            //标记当前位置
             var marker = initMarker(pos,"You are here!",-1,infoWindow); 
 
             infoWindow.setPosition(pos);
@@ -42,17 +44,46 @@ function initMap() {
             infoWindow.open(map);
             map.setCenter(pos);
 
-            
+            //根据关键词搜索附近的场所，并在地图上标记出来
+            var request = {
+                location: pos,
+                radius: '500',
+                type: ['restaurant']
+              };
+            service = new google.maps.places.PlacesService(map);
+            service.nearbySearch(request, function(results, status){
+                if (status == google.maps.places.PlacesServiceStatus.OK) {
+                    createNearbyMarkers(results,infoWindow);
+                  }
+            });
         }, function () {
             handleLocationError(true, infoWindow, map.getCenter());
         });
     } else {
-        handleLocationError(false, infoWindow, map.getCenter());
+        handleLocationError(false, infoWindow, map.getCenter());//不支持
     };
 
     updateMarkers(locations, markers,infoWindow);
 };
 
+//根据an array of PlaceResult objects展示地点标记
+function createNearbyMarkers(places,infowindow) {
+    for (var i = 0, place; place = places[i]; i++) {
+      var image = {
+        url: place.icon,
+        size: new google.maps.Size(71, 71),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(17, 34),
+        scaledSize: new google.maps.Size(25, 25)
+      };
+
+      initMarker(place.geometry.location,place.name,place.place_id,infowindow,image);
+
+    //   var li = document.createElement('li');
+    //   li.textContent = place.name;formatted_address
+    //   placesList.appendChild(li);
+  }
+};
 
 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
     infoWindow.setPosition(pos);
@@ -62,27 +93,33 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
     infoWindow.open(map);
 }
 
-function initMarker(_position,_title,_id,infowindow){
+function initMarker(_position,_title,_id,infowindow,_icon=defaultIcon){
     var marker = new google.maps.Marker({
         position: _position,
         map: map,
         title: _title,
+        draggable: true,
         animation: google.maps.Animation.DROP,
-        icon: defaultIcon,
+        icon: _icon,
         id: _id
     });
     marker.addListener('click', function () {
         populateInfoWindow(this, infowindow);
     });
+
+    // 鼠标悬停时在标记上时，标记跳动
     marker.addListener('mouseover', function () {
         this.setIcon(highlightedIcon);
-    });
+        this.setAnimation(google.maps.Animation.BOUNCE);
+    }); 
     marker.addListener('mouseout', function () {
-        this.setIcon(defaultIcon);
+        this.setIcon(_icon);
+        this.setAnimation(null);
     });
     return marker;
 }
 
+//根据locations展示地点标记
 function updateMarkers(locations, markers,infowindow) {
     for (var i = 0; i < locations.length; i++) {
         var position = locations[i].location;
@@ -113,38 +150,54 @@ function makeMarkerIcon(markerColor) {
 
 //地点详情：位置信息+全景图+第三方网站信息
 function populateInfoWindow(marker, infowindow) {
+    var infoHtml;
     if (infowindow.marker != marker) {
         infowindow.setContent('');
         infowindow.marker = marker;
         infowindow.addListener('closeclick', function () {
             infowindow.marker = null;
         });
-        var streetViewService = new google.maps.StreetViewService();
-        function getStreetView(data, status) {
-            if (status == google.maps.StreetViewStatus.OK) {
-                // 准备详情页DOM
-                infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
-                // 街景视图参数
-                var heading = google.maps.geometry.spherical.computeHeading(
-                    data.location.latLng, marker.position);
-                var panoramaOptions = {
-                    position: data.location.latLng,
-                    pov: {
-                        heading: heading,
-                        pitch: 30
-                    }
-                };
-                var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
-            } else {
-                infowindow.setContent('<div>' + marker.title + '</div>' +
-                    '<div>No Street View Found</div>');
-            }
-        }
+        // 准备详情页DOM #pano #placeDetail #more
+        infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div><div id="placeDetail"></div><div id="more"></div>');
 
+        var streetViewService = new google.maps.StreetViewService();
+            function getStreetView(data, status) {
+                if (status == google.maps.StreetViewStatus.OK) {
+                    // 街景视图参数
+                    var heading = google.maps.geometry.spherical.computeHeading(
+                        data.location.latLng, marker.position);
+                    var panoramaOptions = {
+                        position: data.location.latLng,
+                        pov: {
+                            heading: heading,
+                            pitch: 30
+                        }
+                    };
+                    var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
+                } else {
+                    document.getElementById('pano').innerHTML = "No Street View Found";
+                }
+            }
         streetViewService.getPanorama({ location: marker.position, radius: 200 }, getStreetView);
 
+        //添加地点详情信息
+        var request = {
+            placeId: marker.id,
+            fields: ['name', 'rating','opening_hours','photos', 'formatted_phone_number', 'geometry']
+        };
+        service = new google.maps.places.PlacesService(map);
+        service.getDetails(request, function(place, status){
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                var photos = place.photos;
+                if (!photos) {
+                    return;
+                }
+                document.getElementById('placeDetail').innerHTML = `<div id="detail"><div>${place.name}&nbsp;&nbsp;&nbsp;${place.rating}</div><div>${place.opening_hours.open_now}</div><div>${place.formatted_phone_number}</div><img src = "${photos[0].getUrl({'maxWidth': 35, 'maxHeight': 35})}"/></div>`;
+            }
+        });
+
         //追加其他网站的评论、信息
-        infowindow.setContent(infowindow.content + getComments(marker));
+        document.getElementById('more').innerHTML = getComments(marker);
 
         infowindow.open(map, marker);
     }
