@@ -1,3 +1,6 @@
+/**
+ * 全局变量
+ */
 var map;
 var service;
 var markers = [];
@@ -5,19 +8,63 @@ var defaultIcon;
 var highlightedIcon;
 var infoWindow;
 
-//写死几个地址供测试功能 
-var locations = [
-    { title: 'Park Ave Penthouse', location: { lat: 40.7713024, lng: -73.9632393 } },
-    { title: 'Chelsea Loft', location: { lat: 40.7444883, lng: -73.9949465 } },
-    { title: 'Union Square Open Floor Plan', location: { lat: 40.7347062, lng: -73.9895759 } },
-    { title: 'East Village Hip Studio', location: { lat: 40.7281777, lng: -73.984377 } },
-    { title: 'TriBeCa Artsy Bachelor Pad', location: { lat: 40.7195264, lng: -74.0089934 } },
-    { title: 'Chinatown Homey Space', location: { lat: 40.7180628, lng: -73.9961237 } }
+/**
+ * Location对象列表/列表视图资源
+ */
+var Locations = [
+    { title: 'Park Ave Penthouse', position: { lat: 40.7713024, lng: -73.9632393 },id = 0,icon = defaultIcon},
+    { title: 'Chelsea Loft', position: { lat: 40.7444883, lng: -73.9949465 },id =1,icon = defaultIcon },
+    { title: 'Union Square Open Floor Plan', position: { lat: 40.7347062, lng: -73.9895759 } ,id = 2,icon = defaultIcon},
+    { title: 'East Village Hip Studio', position: { lat: 40.7281777, lng: -73.984377 } ,id = 3,icon = defaultIcon},
+    { title: 'TriBeCa Artsy Bachelor Pad', position: { lat: 40.7195264, lng: -74.0089934 } ,id = 4,icon = defaultIcon},
+    { title: 'Chinatown Homey Space', position: { lat: 40.7180628, lng: -73.9961237 } ,id = 5,icon = defaultIcon}
 ];
+
+/**
+ * Location对象
+ * 根据搜索，展示在列表条目中
+ * 选中之后展示在地图中心
+ */
+var Location = function(data){
+    this.position = ko.observable(data.position);
+    this.title = ko.observable(data.title);
+    this.id = ko.observable(data.id);
+    this.icon = ko.observable(data.icon);
+
+}
 
 // 展示中心位置地图、地址列表位置的标记
 // 选择标记后，清除其他标记，并显示该标记的详细信息
+// 入口函数
 function initMap() {
+
+    /**
+     * knockout绑定数据
+     */
+    var ViewModel = function(){
+        var self = this;
+        this.locationList = ko.observableArray([]);
+    
+        Locations.forEach(element => {
+            self.locationList.push(new Location(element));
+        });
+    
+        this.currentLocation = ko.observable(this.locationList()[0]);
+    
+        this.zoomAndShow = function(){
+            // 作为中心点放大，并展示详情
+        };
+    
+        this.setCurrentLocation = function(locationItem){
+            self.currentLocation(locationItem);
+        }
+    };
+
+    ko.applyBindings(new ViewModel());
+
+    /**
+     * 调用api展示地图
+     */
     var infoWindow = new google.maps.InfoWindow();
 
     defaultIcon = makeMarkerIcon('0091ff');
@@ -150,7 +197,6 @@ function makeMarkerIcon(markerColor) {
 
 //地点详情：位置信息+全景图+第三方网站信息
 function populateInfoWindow(marker, infowindow) {
-    var infoHtml;
     if (infowindow.marker != marker) {
         infowindow.setContent('');
         infowindow.marker = marker;
@@ -161,23 +207,23 @@ function populateInfoWindow(marker, infowindow) {
         infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div><div id="placeDetail"></div><div id="more"></div>');
 
         var streetViewService = new google.maps.StreetViewService();
-            function getStreetView(data, status) {
-                if (status == google.maps.StreetViewStatus.OK) {
-                    // 街景视图参数
-                    var heading = google.maps.geometry.spherical.computeHeading(
-                        data.location.latLng, marker.position);
-                    var panoramaOptions = {
-                        position: data.location.latLng,
-                        pov: {
-                            heading: heading,
-                            pitch: 30
-                        }
-                    };
-                    var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
-                } else {
-                    document.getElementById('pano').innerHTML = "No Street View Found";
-                }
+        function getStreetView(data, status) {
+            if (status == google.maps.StreetViewStatus.OK) {
+                // 街景视图参数
+                var heading = google.maps.geometry.spherical.computeHeading(
+                    data.location.latLng, marker.position);
+                var panoramaOptions = {
+                    position: data.location.latLng,
+                    pov: {
+                        heading: heading,
+                        pitch: 30
+                    }
+                };
+                var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
+            } else {
+                document.getElementById('pano').innerHTML = "No Street View Found";
             }
+        };
         streetViewService.getPanorama({ location: marker.position, radius: 200 }, getStreetView);
 
         //添加地点详情信息

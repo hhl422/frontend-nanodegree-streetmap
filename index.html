@@ -1,30 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Neighborhood Map</title>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
     <link rel="stylesheet" href="css/main.css">
-</head>
-<body> 
-
-    <div class="container">
-        <div class="filter">
-            <!-- 输入keyword变化后，模糊匹配，更新result_list -->
-            <input type="text" id="input" data-bind="textInput :keyword">
-            <!-- 遍历result-list展示所有的name -->
-            <ul id="results" data-bind="foreach: result_list">
-                    <!-- 列表项被点击后，在地图上高亮显示、动画、详情 -->
-                <li data-bind="text: name, click: updateResultList"></li>
-            </ul>
+  </head>
+  <body>
+        <div class="container">
+            <div class="filter">
+                <div style="position: relative">
+                      <!-- 输入keyword变化后，模糊匹配，更新result_list -->
+                    <input type="text" id="input" >
+                     <!-- 遍历result-list展示所有的name -->
+                    <ul id="location-list" data-bind="foreach: locationList" >
+                        <!-- 列表项被点击后，在地图上高亮显示、动画、详情 -->
+                        <li data-bind="text: title , click : $parent.zoomAndShow"></li>
+                    </ul>
+                </div>
+            </div>
+             <!-- 初始化时获取地图，展示result_list中(所在位置附近)的位置标记、信息 -->
+            <div id="map"></div>
         </div>
-        <!-- 初始化时获取地图，展示result_list中的位置标记、信息 -->
-        <div id="map"></div>
-        <!-- <div id="map" data-bind="text :mapContent"></div> -->
-    </div>
-    
+
     <script src="js/knockout-3.2.0.js"></script>
-    <script src="js/komap.js"></script>
+
+    <script src="js/main.js"></script>
+    <script src="js/googlemapfunction.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyAIVJpu_kwmxRR4tkcBnnrCSiQJt3ne4YE&callback=initMap" async defer></script>
-   
-</body>
+  </body>
 </html>
