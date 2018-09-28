@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"> 
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+        <div class="container">
+            <div class="filter">
+                <div style="position: relative">
+                      <!-- 输入keyword变化后，模糊匹配，更新result_list -->
+                    <input type="text" id="input" >
+                     <!-- 遍历result-list展示所有的name -->
+                    <ul id="location-list" data-bind="foreach: locationList" >
+                        <!-- 列表项被点击后，在地图上高亮显示、动画、详情 -->
+                        <li data-bind="text: title , click : $parent.zoomAndShow"></li>
+                    </ul>
+                </div>
+            </div>
+             <!-- 初始化时获取地图，展示result_list中(所在位置附近)的位置标记、信息 -->
+            <div id="map"></div>
+        </div>
+
+    <script src="js/knockout-3.2.0.js"></script>
+
+    <script src="js/amap.js"></script>
+    <script src="js/location-model.js"></script>
+    
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.10&key=80db2e4da5d5ff8802998c915aedb73a&callback=init&plugin=AMap.ElasticMarker,AMap.Geolocation,AMap.Geocoder,AMap.InfoWindow,AMap.PlaceSearch"></script>
+  </body>
+</html>
