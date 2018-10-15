@@ -1,3 +1,5 @@
+var PoiTypes = '汽车服务|汽车销售|汽车维修|摩托车服务|餐饮服务|购物服务|生活服务|体育休闲服务|医疗保健服务|住宿服务|风景名胜|商务住宅|政府机构及社会团体|科教文化服务|交通设施服务|金融保险服务|公司企业|道路附属设施|地名地址信息|公共设施';
+
 /**
  * Model
  * 当前位置
@@ -6,7 +8,7 @@
  * 地点详情
  */
 var KOViewModel = {
-    currentPoi: ko.observable(123),
+    currentPoi: ko.observable(),
     currentAddr: ko.observable('定位中……'),
     startPoi : ko.observable(),
     searchPois : ko.observableArray([]),
@@ -14,11 +16,24 @@ var KOViewModel = {
 
     setStartPoi : function(poi){
         centerLocation(poi.location,poi.detail.adcode);
-    }
+    },
+
+    availableTypes : ko.observableArray(PoiTypes.split("|")),
+    chosenType : ko.observableArray(['餐饮服务']),
+    selectedType : ko.observable('餐饮服务'),
+    error : ko.observable(),
+    // shouldShowMessage: ko.computed(function(){
+    //     if(searchPois!=null){
+    //         return false;
+    //     }
+    //     return true;
+    // }),
+    // shouldShowError: ko.computed(function(){
+    //     return !shouldShowMessage();
+    // })
 
 };
 ko.applyBindings(KOViewModel);
-
 
 var Poi = function(data){
     //Poi 基本信息

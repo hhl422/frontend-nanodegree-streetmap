@@ -1,9 +1,8 @@
 /**
  * 全局变量
  */
-var map;
+var map,auto,placeSearch,infoWindow;
 var infoWindow;
-// var service;
 var markers = [];
 var defaultIcon;
 var currentFormattedAddress;
@@ -15,36 +14,30 @@ function init(){
         zoom:11
     });
 
-    locate();
-};
-
-
-function markCurentPoi(){
-    var marker = new AMap.Marker({
-        // icon: "https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png",
-        icon: "image/location.png",
-        position: KOViewModel.currentPoi(),
+     //输入提示
+    auto = new AMap.Autocomplete({
+        input: "tipinput",
+        citylimit: true
     });
-    map.add(marker);
-};
 
-function markLocation(){
+    //附近搜索
+    placeSearch = new AMap.PlaceSearch({
+        pageSize: 10, 
+        pageIndex: 1,
+        citylimit: true,  
+        map: map,
+        autoFitView: true
+    });
 
-};
+    //定位当前位置，确定城市号码
+    locate();
 
-/**
- * 将传入位置作为地图中心点
- * @param {*} position  传入位置
- */
-function centerLocation(position,adcode){
-    if(markers != null){
-        map.clearMap();
-    }
-    markCurentPoi();
-
-    KOViewModel.startPoi(position);//更新初始点位置
-    map.setCenter(position);
-    getNearbyLocations(position,adcode);
+    document.getElementById("options").addEventListener('change',function(){
+        //选择类别时，刷新附近地点信息 
+        //选取起始位置>实际位置
+        var p = (KOViewModel.startPoi() != null)?KOViewModel.startPoi():KOViewModel.currentPoi();
+        getNearbyLocations(p,KOViewModel.selectedType());
+    });
 };
 
 /**
@@ -76,7 +69,12 @@ function locate(){
             KOViewModel.currentPoi(GeolocationResult.position);
             KOViewModel.currentAddr(GeolocationResult.formattedAddress);
             markCurentPoi();
-            getNearbyLocations(GeolocationResult.position,GeolocationResult.addressComponent.adcode);
+            //搜索填充的城市范围
+            auto.setCity(GeolocationResult.addressComponent.adcode);
+            //附近搜索的城市范围
+            placeSearch.setCity(GeolocationResult.addressComponent.adcode);
+
+            getNearbyLocations(GeolocationResult.position);
         }
     });//返回定位信息
     AMap.event.addListener(geolocation, 'error', function(GeolocationError){
@@ -90,6 +88,100 @@ function locate(){
     });//返回定位出错信息
 };
 
+function addMarker(poi){
+    console.log("addMarker :"+poi);
+    marker = new AMap.Marker({
+        map: map,
+        position: poi
+    });
+
+     //实例化信息窗体
+     var title = '方恒假日酒店<span style="font-size:11px;color:#F00;">价格:318</span>',
+     content = [];
+     content.push("<img src='http://tpc.googlesyndication.com/simgad/5843493769827749134'>地址：北京市朝阳区阜通东大街6号院3号楼东北8.3公里");
+     content.push("电话：010-64733333");
+     content.push("<a href='https://ditu.amap.com/detail/B000A8URXB?citycode=110105'>详细信息</a>");
+     infoWindow = new AMap.InfoWindow({
+         isCustom: true,  //使用自定义窗体
+         content: createInfoWindow(title, content.join("<br/>")),
+         offset: new AMap.Pixel(16, -45)
+     });
+
+    //鼠标点击marker弹出自定义的信息窗体
+    AMap.event.addListener(marker, 'click', function() {
+        infoWindow.open(map, marker.getPosition());
+    }); 
+
+}
+
+//构建自定义信息窗体 
+//copy from https://lbs.amap.com/api/javascript-api/example/infowindow/custom-style-infowindow
+function createInfoWindow(title, content) {
+   var info = document.createElement("div");
+   info.className = "info";
+
+   //可以通过下面的方式修改自定义窗体的宽高
+   //info.style.width = "400px";
+   // 定义顶部标题
+   var top = document.createElement("div");
+   var titleD = document.createElement("div");
+   var closeX = document.createElement("img");
+   top.className = "info-top";
+   titleD.innerHTML = title;
+   closeX.src = "https://webapi.amap.com/images/close2.gif";
+   closeX.onclick = closeInfoWindow;
+
+   top.appendChild(titleD);
+   top.appendChild(closeX);
+   info.appendChild(top);
+
+   // 定义中部内容
+   var middle = document.createElement("div");
+   middle.className = "info-middle";
+   middle.style.backgroundColor = 'white';
+   middle.innerHTML = content;
+   info.appendChild(middle);
+
+   // 定义底部内容
+   var bottom = document.createElement("div");
+   bottom.className = "info-bottom";
+   bottom.style.position = 'relative';
+   bottom.style.top = '0px';
+   bottom.style.margin = '0 auto';
+   var sharp = document.createElement("img");
+   sharp.src = "https://webapi.amap.com/images/sharp.png";
+   bottom.appendChild(sharp);
+   info.appendChild(bottom);
+   return info;
+}
+
+//关闭信息窗体
+function closeInfoWindow() {
+   map.clearInfoWindow();
+}
+
+//标记定位结果
+function markCurentPoi(){
+    var marker = new AMap.Marker({
+        icon: "image/location.png",
+        position: KOViewModel.currentPoi(),
+    });
+    map.add(marker);
+};
+/**
+ * 将在左侧结果列表中的选中项地点作为地图中心点
+ * @param {*} position  传入位置
+ */
+function centerLocation(position,adcode){
+    if(markers != null){
+        map.clearMap();
+    }
+    KOViewModel.startPoi(position);//更新初始点位置
+    console.log("centerLocation:"+ KOViewModel.startPoi());
+    map.setCenter(position);
+    getNearbyLocations(position,KOViewModel.selectedType(),adcode);
+};
+
 /**
  *  搜索 
  * @param {*} position  中心点
@@ -98,31 +190,24 @@ function locate(){
  * @param {*} size      单页显示结果条数
  * @param {*} radius    
  */
-function getNearbyLocations(position,adcode,keyword='餐饮服务',size=10,radius=1000){
-    var placeSearch = new AMap.PlaceSearch({
-        type: keyword, 
-        pageSize: size, 
-        pageIndex: 1,
-        city: adcode, 
-        citylimit: true,  
-        map: map,
-        // panel: "panel", // 结果列表将在此容器中进行展示。
-        autoFitView: true // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
-    });
-
+function getNearbyLocations(position,keyword='餐饮服务',radius=1000){
     placeSearch.searchNearBy(keyword, position, radius, function(status, result) {
+         //清空原搜索结果集
+         KOViewModel.searchPois([]);
+         KOViewModel.error('');
+         map.clearMap();
+         markCurentPoi();
         if(status == "complete"){
-            //清空原搜索结果集
-            KOViewModel.searchPois([]);
             //刷新左侧列表数据
             result.poiList.pois.forEach(element => {
-                console.log(element.name);
                 KOViewModel.searchPois.push(new Poi(element));
+                addMarker(element.location); 
             });
         }else if(status == "no_data"){
-            alterWarning('附近无'+keyword+',请更换关键词查询');
+            
+            KOViewModel.error('附近无'+keyword+',请更换关键词查询');
         }else{
-            alterWarning('附近无'+keyword);
+            KOViewModel.error(keyword);
         }
     });
     markers = map.getAllOverlays('marker');
@@ -130,15 +215,8 @@ function getNearbyLocations(position,adcode,keyword='餐饮服务',size=10,radiu
     //Todo:结合searchInBounds实现自选区域内搜索
 };
 
-function alterWarning(msg){
-    /**
-     * 提示警告
-     */
-    console.log(msg);
-};
-
 function showInfoWindow(){
-
+    console.log('showInfoWindow');
 };
 
 function getDetailInfo(){
