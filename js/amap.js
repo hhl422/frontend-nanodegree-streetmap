@@ -169,7 +169,7 @@ function createCustomInfoWindow(location,name,address="未查询到具体地址"
    content = [];
     content.push("地址："+ address);
     content.push("电话："+ tel);
-    content.push("<a href='"+ website+"'>详细信息</a>");
+    content.push("<a href='"+ website+"' target=\'_blank\'>详细信息</a>");
 
    var middle = document.createElement("div");
    middle.className = "info-middle";
