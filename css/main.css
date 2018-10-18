@@ -1,23 +1,10 @@
-* {
+* ,p{
     margin: 0;
 }
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-}
-
-ul li{
-    list-style-type: none;
-    line-height: 27px;
-    background-color: #aaddcc;
-    margin-bottom: 3px;
-    padding-left: 5px;
-    border-radius: 2px;
-}
-
-ul li:hover{
-    background-color:#eeffcc;
 }
 
 .container {
@@ -27,24 +14,48 @@ ul li:hover{
     position:relative
 }
 
+ul li {
+    color: white;
+    background-color:#333333;
+}
+
+ul li:hover {
+    color: burlywood;
+}
+
+.dropdown-menu {
+    padding: 0;
+    text-align: right;
+    background-color:#333333;
+}
+
 .filter {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 320px;
+    width: 280px;
     z-index: 2;
-    background-color: teal;
+    background-color: black;
+}
+
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
+    color: white;
+    background-color: black;
+    border: 1px solid #000;
 }
 
 .tiptext {
-    font-size: 16px;
+    font-size: 14px;
     position: relative;
     color: white;
-    left: 20px;
+    left: 5px;
     margin-top: 10px;
-    margin-bottom: 10px;
-    width: 280px;
+    width: 270px;
 }
 
 #map {
@@ -73,12 +84,49 @@ input {
     border: 0;
 }
 
-ul,select {
+.info {
+    border: solid 1px silver;
+}
+div.info-top {
     position: relative;
-    left: 20px;
-    width: 280px;
-    padding: 0;
-    margin: 0;
-    border: 0;
+    background: none repeat scroll 0 0 #F9F9F9;
+    border-bottom: 1px solid #CCC;
+    border-radius: 5px 5px 0 0;
+}
+div.info-top div {
+    display: inline-block;
+    color: #333333;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 31px;
+    padding: 0 10px;
+}
+div.info-top img {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    transition-duration: 0.25s;
+}
+div.info-top img:hover {
+    box-shadow: 0px 0px 5px #000;
+}
+div.info-middle {
+    font-size: 12px;
+    padding: 6px;
+    line-height: 20px;
+}
+div.info-bottom {
+    height: 0px;
+    width: 100%;
+    clear: both;
+    text-align: center;
 }
 
+div.info-bottom img {
+    position: relative;
+    z-index: 104;
+}
+
+.input-group {
+    width: 280px;
+}

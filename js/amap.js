@@ -32,12 +32,15 @@ function init(){
     //定位当前位置，确定城市号码
     locate();
 
-    document.getElementById("options").addEventListener('change',function(){
+    $("ul#options").on("click","li",function(){
         //选择类别时，刷新附近地点信息 
         //选取起始位置>实际位置
+        KOViewModel.type($(this).text());
         var p = (KOViewModel.startPoi() != null)?KOViewModel.startPoi():KOViewModel.currentPoi();
-        getNearbyLocations(p,KOViewModel.selectedType());
+        
+        getNearbyLocations(p,KOViewModel.type());
     });
+    
 };
 
 /**
@@ -88,35 +91,36 @@ function locate(){
     });//返回定位出错信息
 };
 
-function addMarker(poi){
-    console.log("addMarker :"+poi);
+function addMarker(element){
+    console.log("addMarker :"+element.location);
     marker = new AMap.Marker({
         map: map,
-        position: poi
+        position: element.location,
+        offset: new AMap.Pixel(-8.5, -16.5),
+        animation:"AMAP_ANIMATION_DROP",
+        title:element.name
     });
-
-     //实例化信息窗体
-     var title = '方恒假日酒店<span style="font-size:11px;color:#F00;">价格:318</span>',
-     content = [];
-     content.push("<img src='http://tpc.googlesyndication.com/simgad/5843493769827749134'>地址：北京市朝阳区阜通东大街6号院3号楼东北8.3公里");
-     content.push("电话：010-64733333");
-     content.push("<a href='https://ditu.amap.com/detail/B000A8URXB?citycode=110105'>详细信息</a>");
-     infoWindow = new AMap.InfoWindow({
-         isCustom: true,  //使用自定义窗体
-         content: createInfoWindow(title, content.join("<br/>")),
-         offset: new AMap.Pixel(16, -45)
-     });
 
     //鼠标点击marker弹出自定义的信息窗体
     AMap.event.addListener(marker, 'click', function() {
-        infoWindow.open(map, marker.getPosition());
+        showInfoWindow(element);
     }); 
+}
 
+function showInfoWindow(element){
+    console.log("鼠标点击marker弹出自定义的信息窗体 :"+element.location);
+    infoWindow = new AMap.InfoWindow({
+        isCustom: true,  //使用自定义窗体
+        content: createInfoWindow(element),
+        position: element.location,
+        offset: new AMap.Pixel(16, -4)
+    });
+
+    infoWindow.open(map, element.location);
 }
 
 //构建自定义信息窗体 
-//copy from https://lbs.amap.com/api/javascript-api/example/infowindow/custom-style-infowindow
-function createInfoWindow(title, content) {
+function createInfoWindow(element) {
    var info = document.createElement("div");
    info.className = "info";
 
@@ -127,7 +131,7 @@ function createInfoWindow(title, content) {
    var titleD = document.createElement("div");
    var closeX = document.createElement("img");
    top.className = "info-top";
-   titleD.innerHTML = title;
+   titleD.innerHTML = element.name;
    closeX.src = "https://webapi.amap.com/images/close2.gif";
    closeX.onclick = closeInfoWindow;
 
@@ -136,10 +140,15 @@ function createInfoWindow(title, content) {
    info.appendChild(top);
 
    // 定义中部内容
+   content = [];
+    content.push("地址："+element.address);
+    content.push("电话："+element.tel);
+    content.push("<a href='"+element.website+"'>详细信息</a>");
+
    var middle = document.createElement("div");
    middle.className = "info-middle";
    middle.style.backgroundColor = 'white';
-   middle.innerHTML = content;
+   middle.innerHTML = content.join("<br/>");
    info.appendChild(middle);
 
    // 定义底部内容
@@ -179,7 +188,7 @@ function centerLocation(position,adcode){
     KOViewModel.startPoi(position);//更新初始点位置
     console.log("centerLocation:"+ KOViewModel.startPoi());
     map.setCenter(position);
-    getNearbyLocations(position,KOViewModel.selectedType(),adcode);
+    getNearbyLocations(position,KOViewModel.type(),adcode);
 };
 
 /**
@@ -201,7 +210,7 @@ function getNearbyLocations(position,keyword='餐饮服务',radius=1000){
             //刷新左侧列表数据
             result.poiList.pois.forEach(element => {
                 KOViewModel.searchPois.push(new Poi(element));
-                addMarker(element.location); 
+                addMarker(element); 
             });
         }else if(status == "no_data"){
             

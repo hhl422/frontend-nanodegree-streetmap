@@ -13,25 +13,15 @@ var KOViewModel = {
     startPoi : ko.observable(),
     searchPois : ko.observableArray([]),
     positionDetail : ko.observableArray([]),
+    type: ko.observable('餐饮服务'),
 
-    setStartPoi : function(poi){
-        centerLocation(poi.location,poi.detail.adcode);
+    showInfo : function(poi){
+        centerLocation(poi.location);
+        showInfoWindow(poi);
     },
 
     availableTypes : ko.observableArray(PoiTypes.split("|")),
-    chosenType : ko.observableArray(['餐饮服务']),
-    selectedType : ko.observable('餐饮服务'),
-    error : ko.observable(),
-    // shouldShowMessage: ko.computed(function(){
-    //     if(searchPois!=null){
-    //         return false;
-    //     }
-    //     return true;
-    // }),
-    // shouldShowError: ko.computed(function(){
-    //     return !shouldShowMessage();
-    // })
-
+    error : ko.observable()
 };
 ko.applyBindings(KOViewModel);
 
