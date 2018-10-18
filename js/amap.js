@@ -1,12 +1,12 @@
 /**
  * 全局变量
  */
-var map,auto,placeSearch,infoWindow;
+var map,auto,placeSearch,infoWindow,geocoder;
 var infoWindow;
 var markers = [];
 var defaultIcon;
 var currentFormattedAddress;
-
+var queryAddress;
 
 function init(){
     map = new AMap.Map('map', {
@@ -18,6 +18,27 @@ function init(){
     auto = new AMap.Autocomplete({
         input: "tipinput",
         citylimit: true
+    });
+
+    AMap.event.addListener(auto, 'select', function(r){
+        console.log("select :"+r.poi.id+" "+r.poi.name+" "+r.poi.adcode+" "+r.poi.district+" "+r.poi.location+" "+r.poi.type);
+        //输入内容选中时
+        marker = new AMap.Marker({
+            map: map,
+            position: r.poi.location,
+            offset: new AMap.Pixel(-8.5, -16.5),
+            animation:"AMAP_ANIMATION_DROP",
+            title: r.poi.name
+        });
+
+        infoWindow = new AMap.InfoWindow({
+            isCustom: true,  //使用自定义窗体
+            content: createCustomInfoWindow(r.poi.location,r.poi.name,r.poi.district),
+            position: r.poi.location,
+            offset: new AMap.Pixel(16, -4)
+        });
+    
+        infoWindow.open(map, r.poi.location);
     });
 
     //附近搜索
@@ -109,9 +130,10 @@ function addMarker(element){
 
 function showInfoWindow(element){
     console.log("鼠标点击marker弹出自定义的信息窗体 :"+element.location);
+
     infoWindow = new AMap.InfoWindow({
         isCustom: true,  //使用自定义窗体
-        content: createInfoWindow(element),
+        content: createCustomInfoWindow(element.location,element.name,element.district,element.tel,element.website),
         position: element.location,
         offset: new AMap.Pixel(16, -4)
     });
@@ -120,7 +142,11 @@ function showInfoWindow(element){
 }
 
 //构建自定义信息窗体 
-function createInfoWindow(element) {
+function createCustomInfoWindow(location,name,address="未查询到具体地址",tel="未提供联系方式",website="https://www.baidu.com/s?wd="+name) {
+    console.log("createCustomInfoWindow :"+name+" "+address+" "+tel+" "+website);
+
+    map.setCenter(location);
+
    var info = document.createElement("div");
    info.className = "info";
 
@@ -131,7 +157,7 @@ function createInfoWindow(element) {
    var titleD = document.createElement("div");
    var closeX = document.createElement("img");
    top.className = "info-top";
-   titleD.innerHTML = element.name;
+   titleD.innerHTML =  name;
    closeX.src = "https://webapi.amap.com/images/close2.gif";
    closeX.onclick = closeInfoWindow;
 
@@ -141,9 +167,9 @@ function createInfoWindow(element) {
 
    // 定义中部内容
    content = [];
-    content.push("地址："+element.address);
-    content.push("电话："+element.tel);
-    content.push("<a href='"+element.website+"'>详细信息</a>");
+    content.push("地址："+ address);
+    content.push("电话："+ tel);
+    content.push("<a href='"+ website+"'>详细信息</a>");
 
    var middle = document.createElement("div");
    middle.className = "info-middle";
@@ -224,13 +250,6 @@ function getNearbyLocations(position,keyword='餐饮服务',radius=1000){
     //Todo:结合searchInBounds实现自选区域内搜索
 };
 
-function showInfoWindow(){
-    console.log('showInfoWindow');
-};
-
-function getDetailInfo(){
-
-};
 
 function queryMoreInfo(){
 

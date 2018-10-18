@@ -16,7 +16,6 @@ var KOViewModel = {
     type: ko.observable('餐饮服务'),
 
     showInfo : function(poi){
-        centerLocation(poi.location);
         showInfoWindow(poi);
     },
 
