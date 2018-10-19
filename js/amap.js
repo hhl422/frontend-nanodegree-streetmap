@@ -168,27 +168,50 @@ function createCustomInfoWindow(location,name,address="未查询到具体地址"
    info.appendChild(top);
 
    // 定义中部内容
-   content = [];
+    content = [];
     content.push("地址："+ address);
     content.push("电话："+ tel);
-    content.push("<a href='"+ website+"' target=\'_blank\'>详细信息</a>");
+    // content.push("<a href='"+ website+"' target=\'_blank\'>详细信息</a>");
+    //通过bingSearch查询更多信息
+    var htmlContent = '';
+    fetch(`https://api.cognitive.microsoft.com/bing/v7.0/search?q=`+name+"&mkt=zh-cn", {
+            method:'GET',
+            headers: {
+                Authorization: 'Client-ID abc123',
+                'Ocp-Apim-Subscription-Key': "ec7ac131546d41a194b768d00f96fe18",
+            }
+        }).then(response => response.json()).then(function(data){
+           
+            firstResult = data.webPages.value[0];
+            if (firstResult) {
+                htmlContent = `<div>
+                    <a href="${firstResult.url}" target=\'_blank\'>${firstResult.name}</a>
+                </div>`;
+            } else {
+                htmlContent = 'Unfortunately, no message was returned for '+name+'.'
+            }
+            console.log(htmlContent);
+            content.push(htmlContent);
 
-   var middle = document.createElement("div");
-   middle.className = "info-middle";
-   middle.style.backgroundColor = 'white';
-   middle.innerHTML = content.join("<br/>");
-   info.appendChild(middle);
+            //绘制中部内容
+            var middle = document.createElement("div");
+            middle.className = "info-middle";
+            middle.style.backgroundColor = 'white';
+            middle.innerHTML = content.join("<br/>");
+            info.appendChild(middle);
 
-   // 定义底部内容
-   var bottom = document.createElement("div");
-   bottom.className = "info-bottom";
-   bottom.style.position = 'relative';
-   bottom.style.top = '0px';
-   bottom.style.margin = '0 auto';
-   var sharp = document.createElement("img");
-   sharp.src = "https://webapi.amap.com/images/sharp.png";
-   bottom.appendChild(sharp);
-   info.appendChild(bottom);
+            // 绘制底部内容
+            var bottom = document.createElement("div");
+            bottom.className = "info-bottom";
+            bottom.style.position = 'relative';
+            bottom.style.top = '0px';
+            bottom.style.margin = '0 auto';
+            var sharp = document.createElement("img");
+            sharp.src = "https://webapi.amap.com/images/sharp.png";
+            bottom.appendChild(sharp);
+            info.appendChild(bottom);
+        });
+   
    return info;
 }
 
@@ -250,9 +273,4 @@ function getNearbyLocations(position,keyword='餐饮服务',radius=1000){
     markers = map.getAllOverlays('marker');
 
     //Todo:结合searchInBounds实现自选区域内搜索
-};
-
-
-function queryMoreInfo(){
-
 };
