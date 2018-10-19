@@ -93,11 +93,13 @@ function locate(){
             KOViewModel.currentPoi(GeolocationResult.position);
             KOViewModel.currentAddr(GeolocationResult.formattedAddress);
             markCurentPoi();
-            //搜索填充的城市范围
-            auto.setCity(GeolocationResult.addressComponent.adcode);
-            //附近搜索的城市范围
-            placeSearch.setCity(GeolocationResult.addressComponent.adcode);
-
+            if (typeof(GeolocationResult.addressComponent) != undefined){
+                //搜索填充的城市范围
+                auto.setCity(GeolocationResult.addressComponent.adcode);
+                //附近搜索的城市范围
+                placeSearch.setCity(GeolocationResult.addressComponent.adcode);
+            }
+        
             getNearbyLocations(GeolocationResult.position);
         }
     });//返回定位信息
